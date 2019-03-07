@@ -1,7 +1,8 @@
-use pancurses::*;
-
+use std::f32;
 use std::f32::consts::PI;
 use std::time::SystemTime;
+
+use pancurses::*;
 
 fn main() {
     // let screen_width = 120;
@@ -14,9 +15,9 @@ fn main() {
     let screen_width = window.get_max_x();
     let screen_height = window.get_max_y();
 
-    let player_x = 14.7; // Player start position
-    let player_y = 5.09;
-    let player_a = 0.0; // player start rotation
+    let mut player_x = 14.7; // Player start position
+    let mut player_y = 5.09;
+    let mut player_a: f32 = 0.0; // player start rotation
 
     let map_width = 16;
     let map_height = 16;
@@ -55,7 +56,7 @@ fn main() {
     'gameloop: loop {
         let _elapsed = time_1.elapsed().unwrap();
         time_1 = SystemTime::now();
-        
+
 
         match window.getch() {
             Some(Input::Character(q)) if q == 'q' => {
@@ -64,10 +65,28 @@ fn main() {
                 return;
             }
             Some(Input::Character(a)) if a == 'a' => {
-                // player_a -= elapsed.checked_mul(speed * 0.75);
+                player_a -= speed * 0.01;
             }
             Some(Input::Character(d)) if d == 'd' => {
-                // player_a += elapsed.checked_mul(speed * 0.75);
+                player_a += speed * 0.01;
+            }
+            Some(Input::Character(w)) if w == 'w' => {
+                player_x += player_a.sin() * speed * 0.01;
+                player_y += player_a.cos() * speed * 0.01;
+
+                if map[(player_x as i32 * map_width + player_y as i32) as usize] == '#' {
+                    player_x -= player_a.sin() * speed * 0.01;
+                    player_x -= player_a.cos() * speed * 0.01;
+                }
+            }
+            Some(Input::Character(s)) if s == 's' => {
+                player_x -= player_a.sin() * speed * 0.01;
+                player_y -= player_a.cos() * speed * 0.01;
+
+                if map[(player_x as i32* map_width + player_y as i32) as usize] == '#' {
+                    player_x += player_a.sin() * speed * 0.01;
+                    player_x += player_a.cos() * speed * 0.01;
+                }
             }
             _ => {}
         }
@@ -78,11 +97,11 @@ fn main() {
         // Raycaster
         // For each column, calculate the projected ray angle into world space
         for x in 0..screen_width {
-            let ray_angle = ((player_a- field_of_view) / 2.0) + ((x as f32 / screen_width as f32) * field_of_view);
+            let ray_angle = ((player_a - field_of_view) / 2.0) + ((x as f32 / screen_width as f32) * field_of_view);
 
             // Find distance to wall
             let step_size = 0.1;
-            let mut distance_to_wall = 0.0;
+            let mut distance_to_wall: f32 = 0.0;
 
             let mut hit_wall = false;
             let _boundary = false;
@@ -91,7 +110,7 @@ fn main() {
             let eye_y = ray_angle.cos();
 
             // Cast ray from player along ray angle and test for intersection with block
-            while !(hit_wall && (distance_to_wall < depth)) {
+            while !hit_wall && (distance_to_wall < depth) {
                 distance_to_wall += step_size;
 
                 let test_x = (player_x + eye_x * distance_to_wall) as i32;
