@@ -1,3 +1,4 @@
+use std::char;
 use std::f32;
 use std::f32::consts::PI;
 use std::time::SystemTime;
@@ -35,8 +36,8 @@ fn main() {
     let mut string_map = "".to_string();
     string_map += "################";
     string_map += "#..............#";
-    string_map += "#..............#";
-    string_map += "#..............#";
+    string_map += "#..#...........#";
+    string_map += "#..#...........#";
     string_map += "#..............#";
     string_map += "#..............#";
     string_map += "#..............#";
@@ -150,6 +151,12 @@ fn main() {
             let floor = screen_height as f32 - ceiling;
 
             // Shade walls based on distance
+            let mut wall_shade = ' ';
+            if distance_to_wall <= depth / 4.0 {  wall_shade = '\u{2588}'; }
+            else if distance_to_wall < depth / 3.0 {  wall_shade = '\u{2593}'; }
+            else if distance_to_wall < depth / 2.0 {  wall_shade = '\u{2592}'; }
+            else if distance_to_wall < depth  {  wall_shade = '\u{2591}'; }
+            else { wall_shade = ' ' };
             // Share the floor based on distance
             
             for y in 0..screen_height {
@@ -157,10 +164,17 @@ fn main() {
                     screen_buffer[(y * screen_width + x) as usize] = ' ';
                 }
                 else if y as f32 > ceiling && y as f32 <= floor {
-                    screen_buffer[(y * screen_width + x) as usize] = 'x';
+                    screen_buffer[(y * screen_width + x) as usize] = wall_shade;
                 }
-                else {
-                    screen_buffer[(y * screen_width + x) as usize] = ' ';
+                else { // Floor
+                    let mut tile = ' ';
+                    let floor_distance: f32 = 1.0 - ((y as f32 - screen_height as f32 / 2.0) / (screen_height as f32 / 2.0));
+                    if floor_distance < 0.25 { tile = '#'; }
+                    else if floor_distance < 0.5 { tile = 'x'; }
+                    else if floor_distance < 0.75 { tile = '.'; }
+                    else if floor_distance < 0.9 { tile = '-'; }
+                    else { tile = ' '; }
+                    screen_buffer[(y * screen_width + x) as usize] = tile;
                 }
 
             }
