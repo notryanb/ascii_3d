@@ -18,7 +18,7 @@ fn main() {
 
     let mut player_x = 14.7; // Player start position
     let mut player_y = 5.09;
-    let mut player_a: f32 = 0.0; // player start rotation
+    let mut player_rotation: f32 = 0.0;
 
     let map_width = 16;
     let map_height = 16;
@@ -29,7 +29,8 @@ fn main() {
 
     let mut screen_buffer: Vec<char> = Vec::with_capacity((screen_width * screen_height) as usize);
 
-    for i in 0..screen_width * screen_height {
+    // Blank out the screen buffer
+    for _ in 0..screen_width * screen_height {
         screen_buffer.push(' ');
     }
 
@@ -51,7 +52,7 @@ fn main() {
     string_map += "#..............#";
     string_map += "################";
 
-    let mut map: Vec<_> = string_map.chars().collect();
+    let map: Vec<_> = string_map.chars().collect();
     let mut time_1 = SystemTime::now();
 
     'gameloop: loop {
@@ -66,27 +67,27 @@ fn main() {
                 return;
             }
             Some(Input::Character(a)) if a == 'a' => {
-                player_a -= speed * 0.01;
+                player_rotation -= speed * 0.01;
             }
             Some(Input::Character(d)) if d == 'd' => {
-                player_a += speed * 0.01;
+                player_rotation += speed * 0.01;
             }
             Some(Input::Character(w)) if w == 'w' => {
-                player_x += player_a.sin() * speed * 0.01;
-                player_y += player_a.cos() * speed * 0.01;
+                player_x += player_rotation.sin() * speed * 0.01;
+                player_y += player_rotation.cos() * speed * 0.01;
 
                 if map[(player_x as i32 * map_width + player_y as i32) as usize] == '#' {
-                    player_x -= player_a.sin() * speed * 0.01;
-                    player_x -= player_a.cos() * speed * 0.01;
+                    player_x -= player_rotation.sin() * speed * 0.01;
+                    player_y -= player_rotation.cos() * speed * 0.01;
                 }
             }
             Some(Input::Character(s)) if s == 's' => {
-                player_x -= player_a.sin() * speed * 0.01;
-                player_y -= player_a.cos() * speed * 0.01;
+                player_x -= player_rotation.sin() * speed * 0.01;
+                player_y -= player_rotation.cos() * speed * 0.01;
 
                 if map[(player_x as i32* map_width + player_y as i32) as usize] == '#' {
-                    player_x += player_a.sin() * speed * 0.01;
-                    player_x += player_a.cos() * speed * 0.01;
+                    player_x += player_rotation.sin() * speed * 0.01;
+                    player_y += player_rotation.cos() * speed * 0.01;
                 }
             }
             _ => {}
@@ -98,7 +99,7 @@ fn main() {
         // Raycaster
         // For each column, calculate the projected ray angle into world space
         for x in 0..screen_width {
-            let ray_angle = ((player_a - field_of_view) / 2.0) + ((x as f32 / screen_width as f32) * field_of_view);
+            let ray_angle = ((player_rotation - field_of_view) / 2.0) + ((x as f32 / screen_width as f32) * field_of_view);
 
             // Find distance to wall
             let step_size = 0.1;
@@ -151,7 +152,7 @@ fn main() {
             let floor = screen_height as f32 - ceiling;
 
             // Shade walls based on distance
-            let mut wall_shade = ' ';
+            let wall_shade;
             if distance_to_wall <= depth / 4.0 {  wall_shade = '\u{2588}'; }
             else if distance_to_wall < depth / 3.0 {  wall_shade = '\u{2593}'; }
             else if distance_to_wall < depth / 2.0 {  wall_shade = '\u{2592}'; }
@@ -167,7 +168,7 @@ fn main() {
                     screen_buffer[(y * screen_width + x) as usize] = wall_shade;
                 }
                 else { // Floor
-                    let mut tile = ' ';
+                    let tile;
                     let floor_distance: f32 = 1.0 - ((y as f32 - screen_height as f32 / 2.0) / (screen_height as f32 / 2.0));
                     if floor_distance < 0.25 { tile = '#'; }
                     else if floor_distance < 0.5 { tile = 'x'; }
