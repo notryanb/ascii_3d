@@ -99,7 +99,7 @@ fn main() {
         // Raycaster
         // For each column, calculate the projected ray angle into world space
         for x in 0..screen_width {
-            let ray_angle = ((player_rotation - field_of_view) / 2.0) + ((x as f32 / screen_width as f32) * field_of_view);
+            let ray_angle = (player_rotation - (field_of_view / 2.0)) + (x as f32 / screen_width as f32) * field_of_view;
 
             // Find distance to wall
             let step_size = 0.1;
@@ -119,7 +119,7 @@ fn main() {
                 let test_y = (player_y + eye_y * distance_to_wall) as i32;
 
                 // test if ray is out of bounds
-                if test_x < 0 || test_x > map_width || test_y < 0 || test_y > map_height {
+                if test_x < 0 || test_x >= map_width || test_y < 0 || test_y >= map_height {
                     hit_wall = true;
                     distance_to_wall = depth;
                 }
@@ -158,8 +158,8 @@ fn main() {
             else if distance_to_wall < depth / 2.0 {  wall_shade = '\u{2592}'; }
             else if distance_to_wall < depth  {  wall_shade = '\u{2591}'; }
             else { wall_shade = ' ' };
-            // Share the floor based on distance
-            
+
+            // Share the floor based on distance            
             for y in 0..screen_height {
                 if y as f32 <= ceiling {
                     screen_buffer[(y * screen_width + x) as usize] = ' ';
